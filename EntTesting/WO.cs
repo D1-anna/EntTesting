@@ -15,36 +15,37 @@ namespace EntTesting
         [OneTimeSetUp]
         public void Init()
         {
-            var basic = new BaseTest();           
+            var basic = new BaseTest();
+            WebDriverWait wait;
         }
        
         [Test]
         public void FindWOListPage()
         {
-             drv.FindElement(By.CssSelector("nav div.menu-primary ul.menu-list"));
+            wait = new WebDriverWait(drv, TimeSpan.FromSeconds(15));            
+
             IWebElement _woInNavBar = drv.FindElement(By.CssSelector("nav div.menu-primary ul.menu-list li:nth-child(2) a"));
-            _woInNavBar.Click();
-            //wait.Until(drv => drv.FindElement(By.CssSelector("nav div.menu-primary ul.menu-list li:nth-child(2) a"))).Click();            
+            wait.Until(ExpectedConditions.ElementToBeClickable(_woInNavBar));
+            new Actions(drv).MoveToElement(_woInNavBar).Click().Perform();
+            
+            wait.Until(ExpectedConditions.ElementToBeClickable(By.LinkText("List")));
             var _woMenu = drv.FindElement(By.LinkText("List"));
-            _woMenu.Click();            
+            new Actions(drv).MoveToElement(_woMenu).Click().Perform();
+                      
             var _titleOfListPage = drv.FindElement(By.ClassName("page-title")).Text;
             Assert.That(_titleOfListPage, Is.EqualTo("WORK ORDERS"));
 
-            Thread.Sleep(4000);
+            Thread.Sleep(2000);
+            
             var _number = FindWO();
             Console.WriteLine($"Number #: {_number}");
-            //Thread.Sleep(4000);
             WOQV();
-
-            //wait.Until(drv => drv.FindElement(By.CssSelector("table")));
-            var woTable = drv.FindElement(By.CssSelector("table"));
-            wait.Until(ExpectedConditions.StalenessOf(woTable));
+            wait.Until(ExpectedConditions.StalenessOf(drv.FindElement(By.XPath("//td[@data-column='WOStatus']"))));
 
             var woStatus =
             drv.FindElement(By.XPath(
                 $"//td[@data-column='Number']/a[contains(text(), '{_number}')]/../../td[@data-column='WOStatus']"));
-            Assert.That(woStatus.Text, Is.EqualTo("Open"));
-
+            Assert.That(woStatus.Text, Is.EqualTo("Open"));    
         }
 
        
@@ -52,6 +53,7 @@ namespace EntTesting
         {
             //NextPage();
 
+            WebDriverWait wait = new WebDriverWait(drv, TimeSpan.FromSeconds(10));
             IWebElement _tableLocation = drv.FindElement(By.XPath("//div[@class='id-wo-list-grid kg-container']"));
             ReadOnlyCollection<IWebElement> rows = _tableLocation.FindElements(By.CssSelector("tbody>tr"));
 
@@ -79,10 +81,10 @@ namespace EntTesting
            
             var _sectionDisplayed = drv.FindElement(By.CssSelector("div.fpo-section.has-frame div.WoQvSchedulingLabelValueFpoSection"));
             
-
             if (!_sectionDisplayed.Displayed)
             {
-                wait.Until(drv => drv.FindElement(By.CssSelector("div.has-frame div.id-fpo-section-header div.id-fpo-section-collapse-button"))).Click();
+                var _woIsAssigned = drv.FindElement(By.CssSelector("div.has-frame div.id-fpo-section-header div.id-fpo-section-collapse-button"));
+                wait.Until(drv => _woIsAssigned).Click();
                 CheckAssignee();
             }
             else if (_sectionDisplayed.Displayed)
@@ -90,51 +92,49 @@ namespace EntTesting
                 CheckAssignee();
             }
         }
-        
+
         public void CheckAssignee()
         {
-            //WebDriverWait wait = new WebDriverWait(drv, TimeSpan.FromSeconds(2));
+            wait = new WebDriverWait(drv, TimeSpan.FromSeconds(10));
             var value = drv.FindElement(By.CssSelector("div.id-fpo-section-content.label-value-fpo-section.WoQvSchedulingLabelValueFpoSection div.label-value-rowgroup-wrapper > div > div:nth-child(2) >div:nth-child(3) >div.lv-value"));
 
             if (value.Text == "- -")
-            {
-                var _assigneUser = "DP Admin 2";
+            {                
                 var _assignButton = drv.FindElement(By.CssSelector("div.id-fpo-section-header div.id-fpo-section-level-actions ul.plain-actions li"));
-                _assignButton.Click();
+                wait.Until(ExpectedConditions.ElementToBeClickable(By.CssSelector("div.id-fpo-section-header div.id-fpo-section-level-actions ul.plain-actions li")));
+                _assignButton.Click();                   
+                
+                wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//div[@id='IdWoActionAssignEditDialog']/div[1]/div/div/span")));  
 
-                var assing = drv.FindElement(By.CssSelector("div#WoAssignUsersGrid.id-tab-users.kg-container"));
-                wait.Until(ExpectedConditions.StalenessOf(assing));
-
-                var _userTab = wait.Until(drv => drv.FindElement(By.CssSelector("form.corrigo-form div.id-tabbar ul.nav-tabs li a[href='#users']")));
+                var _userTab = drv.FindElement(By.CssSelector("form.corrigo-form div.id-tabbar ul.nav-tabs li:nth-child(1) a"));                
                 new Actions(drv).MoveToElement(_userTab).Click().Perform();
+                wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("div#users.tab-pane.fade.active.show")));
 
-                var userTabContent = "div#IdWoActionAssignEditDialog.BaseAssignmentDialog";
-                wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector(userTabContent)));
+                var _selection = drv.FindElement(By.CssSelector("div#WoAssignUsersGrid tr:nth-child(1) td.actions-cell div[title='Select']"));
+                new Actions(drv).MoveToElement(_selection, 1, 1).Click().Perform();
 
-                drv.FindElement(By.CssSelector("div.tab-content form div.id-filter-w_DisplayAs input")).SendKeys(_assigneUser);
-                wait.Until(drv => drv.FindElement(By.CssSelector("div.tab-content div#users form div.search-buttons button"))).Click();
-                var _selectUser = drv.FindElement(By.CssSelector("div#WoAssignUsersGrid tbody[data-role='corrigotooltip'] td.actions-cell"));
-                new Actions(drv).MoveToElement(_selectUser).Perform();
-                var _selectArrow = drv.FindElement(By.CssSelector("div[title='Select']"));
-                new Actions(drv).MoveToElement(_selectArrow, 1,1).Click().Perform();
                 var _savebtn = drv.FindElement(By.CssSelector("div.modal-footer div.right button.id-btn-save"));
-                _savebtn.Click();
+                    _savebtn.Click();
 
-                var modalDialog = drv.FindElement(By.CssSelector("div.modal-body"));
-                wait.Until(ExpectedConditions.StalenessOf(modalDialog));
+                var dialog = drv.FindElement(By.XPath("//div[contains(@class,'modal-body')]/form/div[contains(@data-role,'womainqvarea')]"));
+                wait.Until(drv => dialog);
+                //wait.Until(ExpectedConditions.StalenessOf(dialog));
+
                 PickUpWO();
-            }
-            else PickUpWO();
+                }
+                else PickUpWO();            
         }
      
         public void PickUpWO()
         {
-            
-
+            wait = new WebDriverWait(drv, TimeSpan.FromSeconds(10));
             var _comment = "Automation test";
-
-            var _PikUpBtn = wait.Until(drv => drv.FindElement(By.CssSelector("form.has-main-fpo-area div.main-action span")));
-                _PikUpBtn.Click();
+           
+            
+            var _PikUpBtn = drv.FindElement(By.CssSelector("div.modal-body > form > div.dialog-level-actions-widget.area-actions-widget > div.main-action > span"));
+            //var _PikUpBtn = drv.FindElement(By.CssSelector("form.has-main-fpo-area div.main-action span"));
+            wait.Until(drv => _PikUpBtn);
+            new Actions(drv).MoveToElement(_PikUpBtn).Click().Perform();
 
             var textarea = wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath("//form[@class='corrigo-form']/div/textarea")));            
             new Actions(drv).MoveToElement(textarea).Click().Perform();
@@ -151,7 +151,7 @@ namespace EntTesting
             var _commentCol = drv.FindElement(By.CssSelector("td[data-column='Comment']")).Text;
             Assert.That(_commentCol, Is.EqualTo(_comment));
 
-            drv.FindElement(By.CssSelector("div.modal-footer div.right button.id-btn-close")).Click();
+            drv.FindElement(By.CssSelector("div.modal-footer div.right button.id-btn-close")).Click();           
 
         }
         public void NextPage()
@@ -160,6 +160,8 @@ namespace EntTesting
             new Actions(drv).MoveToElement(nextArrow).Click().Perform();
             wait.Until(ExpectedConditions.PresenceOfAllElementsLocatedBy(By.TagName("table")));
         }
+
+        
 
     }
 }

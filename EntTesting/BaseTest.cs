@@ -16,9 +16,7 @@ namespace EntTesting
             ChromeOptions options = new ChromeOptions();
             options.AddArgument("start-maximized");
             drv = new ChromeDriver(options);
-            LoginTest();
-
-            new WebDriverWait(drv, TimeSpan.FromSeconds(5));
+            LoginTest();           
         }
         public void LoginTest()
         {
@@ -70,7 +68,7 @@ namespace EntTesting
             Assert.IsTrue(_logo.Displayed);
             var title = drv.FindElement(By.CssSelector("div.page-title"));
             Assert.That(title.Text, Is.EqualTo("MY DASHBOARD"));
-            Thread.Sleep(5000);
+            Thread.Sleep(3000);
         }
 
         [OneTimeTearDown]
