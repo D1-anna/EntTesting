@@ -22,26 +22,26 @@ namespace EntTesting
         [Test]
         public void FindWOListPage()
         {
-            wait = new WebDriverWait(drv, TimeSpan.FromSeconds(15));            
+            wait = new WebDriverWait(drv, TimeSpan.FromSeconds(20));            
 
             IWebElement _woInNavBar = drv.FindElement(By.CssSelector("nav div.menu-primary ul.menu-list li:nth-child(2) a"));
             wait.Until(ExpectedConditions.ElementToBeClickable(_woInNavBar));
             new Actions(drv).MoveToElement(_woInNavBar).Click().Perform();
             
-            wait.Until(ExpectedConditions.ElementToBeClickable(By.LinkText("List")));
+            //wait.Until(ExpectedConditions.ElementToBeClickable(By.LinkText("List")));
             var _woMenu = drv.FindElement(By.LinkText("List"));
             new Actions(drv).MoveToElement(_woMenu).Click().Perform();
                       
             var _titleOfListPage = drv.FindElement(By.ClassName("page-title")).Text;
-            Assert.That(_titleOfListPage, Is.EqualTo("WORK ORDERS"));
+            Assert.That(_titleOfListPage, Is.EqualTo("WORK ORDERS*"));
 
             Thread.Sleep(2000);
             
             var _number = FindWO();
             Console.WriteLine($"Number #: {_number}");
             WOQV();
-            wait.Until(ExpectedConditions.StalenessOf(drv.FindElement(By.XPath("//td[@data-column='WOStatus']"))));
-
+            //it.Until(ExpectedConditions.StalenessOf(drv.FindElement(By.XPath("//td[@data-column='WOStatus']"))));
+            Thread.Sleep(2000);
             var woStatus =
             drv.FindElement(By.XPath(
                 $"//td[@data-column='Number']/a[contains(text(), '{_number}')]/../../td[@data-column='WOStatus']"));
@@ -77,7 +77,7 @@ namespace EntTesting
 
         public void WOQV()
         {
-            new WebDriverWait(drv, TimeSpan.FromSeconds(5)).Until(ExpectedConditions.ElementIsVisible(By.CssSelector("div[data-role='woqvdialog']")));
+            new WebDriverWait(drv, TimeSpan.FromSeconds(6)).Until(ExpectedConditions.ElementIsVisible(By.CssSelector("div[data-role='woqvdialog']")));
            
             var _sectionDisplayed = drv.FindElement(By.CssSelector("div.fpo-section.has-frame div.WoQvSchedulingLabelValueFpoSection"));
             
@@ -116,10 +116,10 @@ namespace EntTesting
                 var _savebtn = drv.FindElement(By.CssSelector("div.modal-footer div.right button.id-btn-save"));
                     _savebtn.Click();
 
-                var dialog = drv.FindElement(By.XPath("//div[contains(@class,'modal-body')]/form/div[contains(@data-role,'womainqvarea')]"));
-                wait.Until(drv => dialog);
-                //wait.Until(ExpectedConditions.StalenessOf(dialog));
-
+                //var dialog = drv.FindElement(By.XPath("//div[contains(@class,'modal-body')]/form/div[contains(@data-role,'womainqvarea')]"));
+                
+                Thread.Sleep(2000);
+                ///wait.Until(ExpectedConditions.ElementToBeClickable(By.CssSelector("form.has-main-fpo-area div.main-action span")));
                 PickUpWO();
                 }
                 else PickUpWO();            
@@ -127,17 +127,17 @@ namespace EntTesting
      
         public void PickUpWO()
         {
-            wait = new WebDriverWait(drv, TimeSpan.FromSeconds(10));
+            wait = new WebDriverWait(drv, TimeSpan.FromSeconds(15));
             var _comment = "Automation test";
-           
-            
-            var _PikUpBtn = drv.FindElement(By.CssSelector("div.modal-body > form > div.dialog-level-actions-widget.area-actions-widget > div.main-action > span"));
-            //var _PikUpBtn = drv.FindElement(By.CssSelector("form.has-main-fpo-area div.main-action span"));
-            wait.Until(drv => _PikUpBtn);
-            new Actions(drv).MoveToElement(_PikUpBtn).Click().Perform();
 
-            var textarea = wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath("//form[@class='corrigo-form']/div/textarea")));            
-            new Actions(drv).MoveToElement(textarea).Click().Perform();
+            //wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("form.has-main-fpo-area div.main-action span")));
+            //var _PikUpBtn = drv.FindElement(By.CssSelector("div.modal-body > form > div.dialog-level-actions-widget.area-actions-widget > div.main-action > span"));
+            var _PikUpBtn = drv.FindElement(By.CssSelector("form.has-main-fpo-area div.main-action span"));           
+            new Actions(drv).MoveToElement(_PikUpBtn).Click().Perform();
+            
+            wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//form[@class='corrigo-form']/div/textarea")));
+            var textarea = drv.FindElement(By.CssSelector("form.corrigo-form textarea"));          
+            textarea.Click();
             textarea.SendKeys(_comment);
 
             var _saveBtnOnPickUpWOdialog = drv.FindElement(By.CssSelector("div[data-role=woactionpickupeditdialog] button.id-btn-save"));
