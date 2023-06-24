@@ -16,59 +16,52 @@ namespace EntTesting
             ChromeOptions options = new ChromeOptions();
             options.AddArgument("start-maximized");
             drv = new ChromeDriver(options);
-            LoginTest();           
+            wait = new WebDriverWait(drv, TimeSpan.FromSeconds(20));
+
+            drv.Navigate().GoToUrl($"{Environment.GetEnvironmentVariable("ENT_QA_BASE_URL")}/CorpNet/Login.aspx");
+
         }
-        public void LoginTest()
+      
+        [TestCase("dp", "1234", "none"), Order(1)]
+        public void LoginTestInValidCompany(string user, string password, string company)
         {
-            drv.Navigate().GoToUrl(Environment.GetEnvironmentVariable("ENT_QA_URL"));
-            var _invalidCompanyName = "Invalid company name";
-            var _invalidNameOrPassword = "Invalid User ID or Password";
 
-            //Attempt 1 - enter invalid company name
-            var _userName = By.XPath("/html/body/div[1]/div[2]/form/div/div[2]/div[3]/input");
-            drv.FindElement(_userName)
-                .SendKeys(Environment.GetEnvironmentVariable("ENT_QA_USER"));
-            var _password = By.Id("password");
-            drv.FindElement(_password)
-                .SendKeys(Environment.GetEnvironmentVariable("ENT_QA_PASS"));
-            var _companyName = By.Name("_companyText");
-            drv.FindElement(_companyName).SendKeys("abcsa");
+            wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("username")))
+            .SendKeys(user);
+
+            drv.FindElement(By.Id("password")).SendKeys(password);
+            drv.FindElement(By.Name("_companyText")).SendKeys(company);
+
             drv.FindElement(By.ClassName("login-submit-button")).Click();
 
-            var _error = drv.FindElement(By.CssSelector("div.validation-summary-errors li"));
-            Assert.That(_error.Text, Is.EqualTo(_invalidCompanyName));            
-            
-            //Attempt 2 - clear fields and try to enter invalid password  
-            drv.FindElement(_password).SendKeys("eeeeeee");
+            var title = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("div.validation-summary-errors li")));
+            Assert.That(title.Text, Is.EqualTo("Invalid company name"));
 
-            drv.FindElement(_companyName).Click();
-            drv.FindElement(_companyName).Clear();
-            drv.FindElement(_companyName)
-                .SendKeys(Environment.GetEnvironmentVariable("ENT_QA_COMPANY"));
-            drv.FindElement(By.ClassName("login-submit-button")).Click();
-            
-            var _error2 = drv.FindElement(By.CssSelector("div.validation-summary-errors li"));
-            Assert.That(_error2.Text, Is.EqualTo(_invalidNameOrPassword));
-            
-            //Attempt 3 - clear fields and try to enter valid creades
-            drv.FindElement(_userName).Clear();
-            drv.FindElement(_password).Clear();
-            drv.FindElement(_companyName).Clear();           
-           
-            //valid creads
-            drv.FindElement(_userName)
-                .SendKeys(Environment.GetEnvironmentVariable("ENT_QA_USER"));
-            drv.FindElement(_password)
-                .SendKeys(Environment.GetEnvironmentVariable("ENT_QA_PASS"));
-            drv.FindElement(_companyName)
-                .SendKeys(Environment.GetEnvironmentVariable("ENT_QA_COMPANY"));
+        }
+        [TestCase, Order(2)]
+        public void ClearCreadentials()
+        {
+            wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("username")))
+            .Clear();
+            drv.FindElement(By.Id("password")).Clear();
+            drv.FindElement(By.Name("_companyText")).Clear();
+        }
+        [TestCase("ENT_QA_USER", "ENT_QA_PASS", "ENT_QA_COMPANY"), Order(3)]
+
+        public void LoginTestValid(string user, string password, string company)
+        { 
+          
+            wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("username")))
+            .SendKeys(Environment.GetEnvironmentVariable(user));
+
+            drv.FindElement(By.Id("password")).SendKeys(Environment.GetEnvironmentVariable(password));
+            drv.FindElement(By.Name("_companyText")).SendKeys(Environment.GetEnvironmentVariable(company));
+
             drv.FindElement(By.ClassName("login-submit-button")).Click();
 
-            var _logo = drv.FindElement(By.CssSelector("div.menu-secondary ul li.menu-user a.menu-drop"));
-            Assert.IsTrue(_logo.Displayed);
-            var title = drv.FindElement(By.CssSelector("div.page-title"));
+            var title = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("div.page-title")));
             Assert.That(title.Text, Is.EqualTo("MY DASHBOARD"));
-            Thread.Sleep(3000);
+
         }
 
         [OneTimeTearDown]
