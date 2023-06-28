@@ -21,15 +21,7 @@ namespace EntTesting
 
             drv.Navigate().GoToUrl($"{Environment.GetEnvironmentVariable("ENT_QA_BASE_URL")}/CorpNet/Login.aspx");
 
-            wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("username")))
-                .SendKeys(Environment.GetEnvironmentVariable("ENT_QA_USER"));
-
-            drv.FindElement(By.Id("password")).SendKeys(Environment.GetEnvironmentVariable("ENT_QA_PASS"));
-            drv.FindElement(By.Name("_companyText")).SendKeys(Environment.GetEnvironmentVariable("ENT_QA_COMPANY"));
-            drv.FindElement(By.CssSelector("input.btn.login-submit-button")).Click();
-
-            wait.Until(
-                ExpectedConditions.ElementIsVisible(By.CssSelector("div.menu-secondary ul li.menu-user a.menu-drop")));
+           
         }
         [TearDown]
         public void TearDown()
@@ -37,11 +29,13 @@ namespace EntTesting
             drv.Quit();
         }
 
-        [Test]
-        public void FindWOListPage()
+        [TestCase("ENT_QA_USER", "ENT_QA_PASS", "ENT_QA_COMPANY")]
+        public void FindWOListPage(string user, string password, string company)
         {
+            _ = Login(user, password, company);
             drv.Navigate()
                        .GoToUrl($"{Environment.GetEnvironmentVariable("ENT_QA_BASE_URL")}/corpnet/workorder/workorderlist.aspx");
+            
 
             var _titleOfListPage = drv.FindElement(By.ClassName("page-title")).Text;
             Assert.That(_titleOfListPage, Is.EqualTo("WORK ORDERS*"));
@@ -50,15 +44,12 @@ namespace EntTesting
             wait.Until(ExpectedConditions.VisibilityOfAllElementsLocatedBy(woTable));
 
             var woLink = By.XPath("//td[@data-column='WOStatus'][contains(text(), 'New')][1]/following-sibling::td/a");
-
             var woLinkElement = wait.Until(drv => drv.FindElement(woLink));
 
             var woNumber = drv.FindElement(woLink).Text;
-            drv.FindElement(woLink).Click();
-         
+            drv.FindElement(woLink).Click();         
 
             WOQV();
-
             wait.Until(ExpectedConditions.StalenessOf(woLinkElement));
 
             var woStatus =
@@ -67,11 +58,11 @@ namespace EntTesting
             Assert.That(woStatus.Text, Is.EqualTo("Open"));    
         }
 
-
         public void WOQV()
         {
             wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("div.modal.QvDialog.WoQvDialog")));
-            var _sectionDisplayed = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("div.fpo-section.has-frame div.WoQvSchedulingLabelValueFpoSection")));
+            var _sectionDisplayed = wait.Until(ExpectedConditions.ElementIsVisible
+                (By.CssSelector("div.fpo-section.has-frame div.WoQvSchedulingLabelValueFpoSection")));
             
             if (!_sectionDisplayed.Displayed)
             {
@@ -114,28 +105,20 @@ namespace EntTesting
         }
      
         public void PickUpWO()
-        {
-          
-            var _comment = "Automation test";
-           
+        {          
+            var _comment = "Automation test";           
             wait.Until(ExpectedConditions.ElementToBeClickable(By.CssSelector("form.has-main-fpo-area div.main-action span"))).Click();
-            
-            //(By.XPath("//form[@class='corrigo-form']/div/textarea")));
-            var textarea = wait.Until(ExpectedConditions.ElementToBeClickable(By.CssSelector("form.corrigo-form textarea")));          
-            //textarea.Click();
+            var textarea = wait.Until(ExpectedConditions.ElementToBeClickable(By.CssSelector("form.corrigo-form textarea")));        
             textarea.SendKeys(_comment);
 
             var _saveBtnOnPickUpWOdialog = drv.FindElement(By.CssSelector("div[data-role=woactionpickupeditdialog] button.id-btn-save"));
             _saveBtnOnPickUpWOdialog.Click();
-
             var table = drv.FindElement(By.CssSelector("div[data-role=woactivityloggrid] tbody"));
             wait.Until(ExpectedConditions.StalenessOf(table));
-
             var _actionCol = drv.FindElement(By.CssSelector("td[data-column='ActionTitle']")).Text;
             Assert.That(_actionCol, Is.EqualTo("Picked Up"));
             var _commentCol = drv.FindElement(By.CssSelector("td[data-column='Comment']")).Text;
             Assert.That(_commentCol, Is.EqualTo(_comment));
-
             drv.FindElement(By.CssSelector("div.modal-footer div.right button.id-btn-close")).Click();           
 
         }
@@ -146,7 +129,16 @@ namespace EntTesting
             wait.Until(ExpectedConditions.PresenceOfAllElementsLocatedBy(By.TagName("table")));
         }
 
-        
+        private string Login(string user, string password, string company)
+        {
+            wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("username")))
+            .SendKeys(Environment.GetEnvironmentVariable(user));
+            drv.FindElement(By.Id("password")).SendKeys(Environment.GetEnvironmentVariable(password));
+            drv.FindElement(By.Name("_companyText")).SendKeys(Environment.GetEnvironmentVariable(company));
+            drv.FindElement(By.ClassName("login-submit-button")).Click();
+            var title = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("div.page-title")));
+            return title.Text;
+        }
 
     }
 }
