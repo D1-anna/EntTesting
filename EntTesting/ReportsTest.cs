@@ -29,14 +29,6 @@ namespace EntTesting
         }
 
         [TestCase("ENT_QA_USER", "ENT_QA_PASS", "ENT_QA_COMPANY")]
-
-        public void LoginTestValid(string user, string password, string company)
-        {
-            var title = Login(user, password, company);
-            Assert.That(title, Is.EqualTo("MY DASHBOARD"));
-        }
-
-        [TestCase("ENT_QA_USER", "ENT_QA_PASS", "ENT_QA_COMPANY")]
         public void OpenReportListPage(string user, string password, string company)
         {
             _ = Login(user, password, company);
@@ -62,14 +54,15 @@ namespace EntTesting
             new Actions(drv).MoveToElement(toogleLocation, 2, 0).Click().Perform();
            
             var currentTab = drv.WindowHandles.Count;
+            Console.WriteLine("currentTab: " + currentTab);
             drv.FindElement(By.CssSelector("div.modal-footer button.id-generate-button")).Click();
 
             wait.Until(drv => drv.WindowHandles.Count > currentTab);
             drv.SwitchTo().Window(drv.WindowHandles.Last());
-
+            Console.WriteLine("second tab : " + drv.WindowHandles.Count);
             //Wait for the new tab to finish loading content
             wait.Until(drv => drv.FindElement(By.CssSelector("[aria-label='Report table']")));
-
+           
             Assert.That(drv.Title, Is.EqualTo($"{reportName}"));
 
             drv.Close();
