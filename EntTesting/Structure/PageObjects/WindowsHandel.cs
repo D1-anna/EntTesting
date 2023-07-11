@@ -5,6 +5,7 @@ using SeleniumExtras.PageObjects;
 using SeleniumExtras.WaitHelpers;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,25 +13,23 @@ using System.Threading.Tasks;
 namespace EntTesting.Structure.PageObjects
 {
     public class WindowsHandel : BasePage
-    {        
-        //private readonly CorpApplication _pageTitle;
-
-        public WindowsHandel(ApplicationContext context) : base(context) { }
-
+    {
+       
+        [FindsBy(How = How.CssSelector, Using = "[aria-label='Report table']")]
+        private readonly IWebElement _pageTitle;
+        public WindowsHandel(ApplicationContext context) : base(context) { PageFactory.InitElements(drv, this); }
 
         public string TabTitle()
         {
             return drv.Title;
         }
-        public void SwitchToReportContent(string title) { 
-
+        public void SwitchToReportContent(string title) 
+        { 
             var currentTab = drv.WindowHandles.Count;
             //wait.Until(drv => drv.WindowHandles.Count > currentTab);
             drv.SwitchTo().Window(drv.WindowHandles.Last());
-            wait.Until(drv => drv.FindElements(By.CssSelector("[aria-label='Report table']")));
-            //Assert.That(_pageTitle.GetTabTitle(), Is.EqualTo($"{title}"));
-            //wait.Until(ExpectedConditions.Ele(_pageTitle));
-
+            wait.Until(drv => _pageTitle);            
+            Assert.That(drv.Title, Is.EqualTo($"{title}")); 
         }
         public void SwitchToFirstTab()
         {

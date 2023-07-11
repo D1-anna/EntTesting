@@ -1,51 +1,68 @@
 ﻿using EntTesting.Structure.BusinessLogic;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
+using SeleniumExtras.PageObjects;
 using SeleniumExtras.WaitHelpers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace EntTesting.Structure.PageObjects
-{
-    public class ReportListPage : BasePage
+
+namespace EntTesting.Structure.PageObjects;
+
+public class ReportListPage : BasePage
+{    
+    [FindsBy(How = How.CssSelector, Using = "[aria-label='Report table']")]
+    private readonly IWebElement _reportNameIs;
+
+    [FindsBy(How = How.CssSelector, Using = "div.modal-footer button.id-generate-button")]
+    private readonly IWebElement _generateBtn;
+
+    [FindsBy(How = How.ClassName, Using = "page-title")]
+    private readonly IWebElement _title;
+
+    [FindsBy(How = How.CssSelector, Using = "table tr:nth-child(1) td.gc-ReportsListGrid-DisplayAs a")]
+    private readonly IWebElement _firstReportName;
+
+    [FindsBy(How = How.CssSelector, Using = "div[data-role='generatereportdialog']")]
+    private readonly IWebElement modalDialog;
+
+    [FindsBy(How = How.CssSelector, Using = "div.modal-footer button.id-btn-close")]
+    private readonly IWebElement _closeBtnOnModalDialog;
+
+    [FindsBy(How = How.XPath, Using = "//div[contains(@class,'widget-label')]//label[contains(text(),'Show Report Header')]/../following-sibling::div//span[contains(@class,'k-switch-container')]")]
+    private readonly IWebElement toogleLocation;
+
+    public ReportListPage(ApplicationContext context) : base(context)
     {
-        private By _title = By.ClassName("page-title");
-        private By _reportName = By.CssSelector("table tr:nth-child(1) td.gc-ReportsListGrid-DisplayAs a");
-        private By modalDialog = By.CssSelector("div[data-role='generatereportdialog']");
-        private By toogleLocation = By.XPath("//div[contains(@class,'widget-label')]//label[contains(text(),'Show Report Header')]/../following-sibling::div//span[contains(@class,'k-switch-container')]");
-        private By _generateBtn = By.CssSelector("div.modal-footer button.id-generate-button");
-        private By _closeBtnOnModalDialog = By.CssSelector("div.modal-footer button.id-btn-close");
-        public ReportListPage(ApplicationContext context) : base (context)
-        { 
-        }
+        PageFactory.InitElements(drv, this);
+    }
 
-        public void OpenReportList()
-        {
-            drv.Navigate().GoToUrl($"{context.baseUrl}/corpnet/report/reportlist.aspx");
-            Assert.That(wait.Until(ExpectedConditions.ElementIsVisible(_title)).Text, Is.EqualTo("REPORTS"));
-        }
+    public void OpenReportList()
+    {
+        drv.Navigate().GoToUrl($"{context.baseUrl}/corpnet/report/reportlist.aspx");
+        Assert.That(_title.Text, Is.EqualTo("REPORTS"));
+    }
 
-        public string FindFirtsReport()
-        {
-            var reportName = wait.Until(ExpectedConditions.ElementToBeClickable(_reportName)).Text;
-            drv.FindElement(_reportName).Click();
-            return reportName;
-        }
-        public void SwitchToogle()
-        {
-            wait.Until(ExpectedConditions.ElementIsVisible(modalDialog));
-            new Actions(drv).MoveToElement(drv.FindElement(toogleLocation), 2, 0).Click().Perform();
-        }
-        public void Generate()
-        {
-            drv.FindElement(_generateBtn).Click();
-        }
-        public void CloseDialog()
-        {
-            drv.FindElement(_closeBtnOnModalDialog).Click();
-        }
+    public string FindFirtsReport()
+    {
+        var reportName = wait.Until(ExpectedConditions.ElementToBeClickable(_firstReportName)).Text;
+        _firstReportName.Click();
+        return reportName;
+    }
+    public void SwitchToogle()
+    {
+        wait.Until(drv => modalDialog);
+        wait.Until(ExpectedConditions.ElementToBeClickable(toogleLocation));
+        toogleLocation.Click(); 
+    }
+    public void Generate()
+    {
+        var currentTab = drv.WindowHandles.Count;       
+        _generateBtn.Click();
+        wait.Until(drv => drv.WindowHandles.Count > currentTab);
+        drv.SwitchTo().Window(drv.WindowHandles.Last());
+        wait.Until(drv => _reportNameIs); 
+    }
+    public void CloseDialog()
+    {
+        _closeBtnOnModalDialog.Click();
     }
 }

@@ -2,7 +2,6 @@
 
 namespace EntTesting.Structure;
 
-
 [TestFixture]
 public class GenerateReportAndVerifyName
 {
@@ -23,8 +22,6 @@ public class GenerateReportAndVerifyName
     {            
         string reportName = _app.LoginWithDefaulUser().OpenReportListPage().OpenReport();
         _app.SetHeadersAndGenerate().TabsHeandle(reportName);
-
-        //Assert.That(_app.GetTabTitle(), Is.EqualTo($"{reportName}"));
         _app.CloseTab().SwitchToFirstTab().CloseModalDialog();
     }
 }

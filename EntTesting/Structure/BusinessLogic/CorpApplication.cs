@@ -26,10 +26,9 @@ public class CorpApplication
 
     public CorpApplication() 
     {
-        //var options = new ChromeOptions();
-        //options.AddArgument("start-maximized");
-        //var drv = new ChromeDriver(options);
-        var drv = new ChromeDriver();
+        var options = new ChromeOptions();
+        options.AddArgument("start-maximized");
+        var drv = new ChromeDriver(options);       
 
         _context = new ApplicationContext
         {
@@ -38,7 +37,7 @@ public class CorpApplication
             userName = Environment.GetEnvironmentVariable("ENT_QA_USER")!,
             userPassword = Environment.GetEnvironmentVariable("ENT_QA_PASS")!,
             companyName = Environment.GetEnvironmentVariable("ENT_QA_COMPANY")!
-        };             
+        };            
 
         loginPage = new LoginPage(_context);
         reportList = new ReportListPage(_context);
@@ -63,8 +62,7 @@ public class CorpApplication
     public CorpApplication SetHeadersAndGenerate()
     {
         reportList.SwitchToogle();
-        reportList.Generate();
-
+        reportList.Generate();        
         return this;
     }
     public CorpApplication CloseModalDialog()
@@ -74,8 +72,7 @@ public class CorpApplication
     }
     public CorpApplication TabsHeandle(string title)
     {
-        _window.SwitchToReportContent(title);
-        Assert.That(GetTabTitle(), Is.EqualTo($"{title}"));
+        _window.SwitchToReportContent(title);       
         return this;
     }
     public CorpApplication SwitchToFirstTab()
@@ -97,5 +94,4 @@ public class CorpApplication
         _context.drv.Close();
         return this;
     }
-
 }
